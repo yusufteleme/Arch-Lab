@@ -1,0 +1,102 @@
+New version
+
+bool D_stall = 
+	# Conditions for a load/use hazard
+	E_icode in { IMRMOVQ, IPOPQ } &&
+	!(D_icode in { IRMMOVQ, IPUSHQ } &&
+	E_dstM == d_srcA && E_dstM != d_srcB) &&
+	E_dstM in { d_srcA, d_srcB };
+
+Old version
+
+bool D_stall = 
+	# Conditions for a load/use hazard
+	E_icode in { IMRMOVQ, IPOPQ } &&
+	 E_dstM in { d_srcA, d_srcB };
+
+###########################################################
+ORIGINAL ASM
+
+
+Loop:           
+        mrmovq (%rdi), %r10     # read val from src...
+        andq %r10, %r10         # val >= 0?
+        jge Positive            # if so, skip negating
+        rrmovq %r10, %r9        # temporary move
+        xorq %r10, %r10         # zero r10
+        subq %r9, %r10          # negation achieved!
+Positive:
+        addq %r10, %rax         # sum += absval   
+        rmmovq %r10, (%rsi)     # ...and store it to dst
+        irmovq $1, %r10
+        subq %r10, %rdx         # n--
+        irmovq $8, %r10
+        addq %r10, %rsi         # dst++
+        addq %r10, %rdi         # src++
+        andq %rdx,%rdx          # n > 0?
+        jg Loop                 # if so, goto Loop:
+
+#################################################################
+
+
+######################################################################
+MY IMPLEMENTATION FOR ABSCOPY
+
+
+#########################################################################
+
+
+# Put these lines to end of function
+
+SmallLoop:
+        isubq $-4, %rdx # n += 4
+        isubq $0, %rdx  # ..
+        jl Done
+Small1:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        andq %r10, %r10
+        jge Small2
+        isubq $0, %r10
+Small2:
+        addq %r10, %rax
+        isubq $1, %rdx
+        isubq $0, %rdx
+        rmmovq %r10, (%rsi)
+        jl Done
+        andq %r11, %r11
+        jge Small3
+        isubq $0, %r11
+Small3:
+        addq %r11, %rax
+        rmmovq %r11, 8(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jl Done
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11        
+        andq %r10, %r10
+        jge Small4
+        isubq $0, %r10
+Small4:
+        addq %r10, %rax
+        rmmovq %r10, 16(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jl Done
+        andq %r11, %r11
+        jge SmallLast
+        isubq $0, %r11
+SmallLast:
+        addq %r11, %rax
+        rmmovq %r11, 24(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jl Done
+        mrmovq 32(%rdi), %r10
+        andq %r10, %r10
+        jge SmallLastAbs
+        isubq $0, %r10
+SmallLastAbs:
+        addq %r10, %rax
+        rmmovq %r10, 32(%rsi)

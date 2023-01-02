@@ -1,0 +1,137 @@
+# You can modify this portion
+        # Loop header
+        xorq %rax,%rax          # sum = 0;
+        andq %rdx,%rdx          # n <= 0?
+        jle Done                # if so, goto Done:
+        
+Cycle:
+        isubq $7, %rdx # n -= 4
+        isubq $0, %rdx  # ..
+        jle Small # Last four ekement
+CycleStart:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        andq %r10, %r10
+        jge Cycle1
+        isubq $0, %r10
+Cycle1:
+        addq %r10, %rax
+        rmmovq %r10, (%rsi)
+        andq %r11, %r11
+        jge Cycle2
+        isubq $0, %r11
+Cycle2:
+        addq %r11, %rax
+        rmmovq %r11, 8(%rsi)
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11        
+        andq %r10, %r10
+        jge Cycle3
+        isubq $0, %r10
+Cycle3:
+        addq %r10, %rax
+        rmmovq %r10, 16(%rsi)
+        andq %r11, %r11
+        jge Cycle4
+        isubq $0, %r11
+Cycle4:
+        addq %r11, %rax
+        rmmovq %r11, 24(%rsi)
+	mrmovq 32(%rdi), %r10
+	mrmovq 40(%rdi), %r11        
+        andq %r10, %r10
+        jge Cycle5
+        isubq $0, %r10
+Cycle5:
+        addq %r10, %rax
+        rmmovq %r10, 32(%rsi)
+        andq %r11, %r11
+        jge Cycle6
+        isubq $0, %r11
+Cycle6:
+        addq %r11, %rax
+        rmmovq %r11, 40(%rsi)
+        mrmovq 48(%rdi), %r10
+        andq %r10, %r10
+        jge CycleEnd
+        isubq $0, %r10
+CycleEnd:
+        addq %r10, %rax
+        rmmovq %r10, 48(%rsi)
+        isubq $-56, %rdi
+        isubq $0, %rdi
+        isubq $-56, %rsi
+        isubq $0, %rsi
+        jmp Cycle
+
+
+Small:
+        isubq $-7, %rdx # add 4 to n 
+        isubq $0, %rdx
+        mrmovq (%rdi), %r10 # src[i] -> r10
+        mrmovq 8(%rdi), %r11 # src[i+1] -> r11
+        andq %r10, %r10
+        jge Small1
+        isubq $0, %r10
+Small1:
+        addq %r10, %rax
+        rmmovq %r10, (%rsi) # src[i] -> dest[i]
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Small2
+        isubq $0, %r11
+Small2:
+        addq %r11, %rax
+        rmmovq %r11, 8(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11        
+        andq %r10, %r10
+        jge Small3
+        isubq $0, %r10
+Small3:
+        addq %r10, %rax
+        rmmovq %r10, 16(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Small4
+        isubq $0, %r11
+Small4:
+        addq %r11, %rax
+        rmmovq %r11, 24(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+	mrmovq 32(%rdi), %r10
+	mrmovq 40(%rdi), %r11        
+        andq %r10, %r10
+        jge Small5
+        isubq $0, %r10
+Small5:
+        addq %r10, %rax
+        rmmovq %r10, 32(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge SmallEnd
+        isubq $0, %r11
+SmallEnd:
+        addq %r11, %rax
+        rmmovq %r11, 40(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        mrmovq 48(%rdi), %r10
+        andq %r10, %r10
+        jge SmallEnd2
+        isubq $0, %r10
+SmallEnd2:
+        addq %r10, %rax
+        rmmovq %r10, 48(%rsi)

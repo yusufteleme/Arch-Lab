@@ -1,0 +1,73 @@
+0x000:                      | .pos 0
+0x000:                      | main:
+0x000: 30f40008000000000000 | 	irmovq stack, %rsp
+0x00a: 30f70002000000000000 | 	irmovq ele0, %rdi
+0x014: 30f60004000000000000 | 	irmovq array, %rsi
+0x01e: 30f23800000000000000 | 	irmovq $56, %rdx
+0x028: 803c00000000000000   | 	call insert_ll
+0x031: 40c4f8ffffffffffffff | 	rmmovq %r12, -8(%rsp)
+0x03b: 00                   | 	halt
+                            | 
+0x03c:                      | insert_ll:
+0x03c: 40260000000000000000 | 	rmmovq %rdx, (%rsi)
+0x046: 2075                 | 	rrmovq %rdi, %rbp
+0x048: 6277                 | 	andq %rdi, %rdi
+0x04a: 748300000000000000   | 	jne test
+0x053: 50870000000000000000 | 	mrmovq (%rdi), %r8
+0x05d: 6128                 | 	subq %rdx, %r8
+0x05f: 718300000000000000   | 	jle test
+0x068: 40760800000000000000 | 	rmmovq %rdi, 8(%rsi)
+0x072: 2060                 | 	rrmovq %rsi, %rax
+0x074: 6388                 | 	xorq %r8, %r8
+0x076: 6355                 | 	xorq %rbp, %rbp
+0x078: 90                   | 	ret
+0x079:                      | loop:
+0x079: 50550800000000000000 | 	mrmovq 8(%rbp), %rbp
+0x083:                      | test:	
+0x083: 50c50800000000000000 | 	mrmovq 8(%rbp), %r12
+0x08d: 62cc                 | 	andq %r12, %r12
+0x08f: 73ad00000000000000   | 	je else
+0x098: 50ac0000000000000000 | 	mrmovq (%r12), %r10
+0x0a2: 612a                 | 	subq %rdx, %r10
+0x0a4: 727900000000000000   | 	jl loop
+0x0ad:                      | else:
+0x0ad: 40c60800000000000000 | 	rmmovq %r12, 8(%rsi)
+0x0b7: 40650800000000000000 | 	rmmovq %rsi, 8(%rbp)
+0x0c1: 6355                 | 	xorq %rbp, %rbp
+0x0c3: 63cc                 | 	xorq %r12, %r12
+0x0c5: 63aa                 | 	xorq %r10, %r10
+0x0c7: 2070                 | 	rrmovq %rdi, %rax
+0x0c9: 90                   | 	ret
+                            | 
+                            | 
+0x200:                      | .pos 0x200
+0x200:                      | ele0:
+0x200: 0500000000000000     | .quad 0x0005
+0x208: 1002000000000000     | .quad ele1
+0x210:                      | ele1:
+0x210: 0c00000000000000     | .quad 0x000c
+0x218: 2002000000000000     | .quad ele2
+0x220:                      | ele2:
+0x220: 1000000000000000     | .quad 0x0010
+0x228: 3002000000000000     | .quad ele3
+0x230:                      | ele3:
+0x230: 1a00000000000000     | .quad 0x001a
+0x238: 4002000000000000     | .quad ele4
+0x240:                      | ele4:
+0x240: 3000000000000000     | .quad 0x0030
+0x248: 5002000000000000     | .quad ele5
+0x250:                      | ele5:
+0x250: 4500000000000000     | .quad 0x0045
+0x258: 6002000000000000     | .quad ele6
+0x260:                      | ele6:
+0x260: 5e00000000000000     | .quad 0x005e
+0x268: 0000000000000000     | .quad 0 # NULL
+                            | 
+                            | 
+0x400:                      | .pos 0x400
+0x400:                      | array:
+0x400: 0000000000000000     | 	.quad 0
+0x408: 0000000000000000     | 	.quad 0
+                            | 
+0x800:                      | .pos 0x800
+0x800:                      | stack:

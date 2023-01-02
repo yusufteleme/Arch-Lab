@@ -1,0 +1,6 @@
+.pos 0
+main:
+	irmovq $5, %rax
+	irmovq $0, %rbx
+	andq %rbx, %rbx
+	halt

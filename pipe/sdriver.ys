@@ -1,0 +1,225 @@
+#######################################################################
+# Test for copying block of size 4;
+#######################################################################
+	.pos 0
+main:	irmovq Stack, %rsp  	# Set up stack pointer
+
+	# Set up arguments for copy function and then invoke it
+	irmovq $4, %rdx		# src and dst have 4 elements
+	irmovq dest, %rsi	# dst array
+	irmovq src, %rdi	# src array
+    # corrupt all the unused registers to prevent assumptions
+    irmovq $0x5710331, %rax
+    irmovq $0x5710331, %rbx
+    irmovq $0x5710331, %rcx
+    irmovq $0x5710331, %rbp
+    irmovq $0x5710331, %r8
+    irmovq $0x5710331, %r9
+    irmovq $0x5710331, %r10
+    irmovq $0x5710331, %r11
+    irmovq $0x5710331, %r12
+    irmovq $0x5710331, %r13
+    irmovq $0x5710331, %r14
+	call abscopy		 
+	halt			# should halt with abs sum in %rax
+StartFun:
+#/* $begin abscopy-ys */
+##################################################################
+# abscopy.ys - copy the absolute values of a src block of n words to dst.
+# Return the sum of copied (absolute) values.
+#
+# Include your name and ID here.
+# @Abdurrahman Yusuf Teleme
+# @2448900
+# Describe how and why you modified the baseline code.
+# I modified baseline it checks every value one by one and
+# if it is negative it adds it to source after negating.
+# In this way, we cannot use data forwarding effectively.
+# In my way, I divide the source small portions which
+# contains only max 6 element. In each cycle I know that
+# there is four element and I do not need to check every
+# time n<=0 or not. Also, I copy 2 elements each time to
+# prevent waiting for to memory access time.
+# If there are less than or equals to 6 reamining elements,
+# I copy them to dest by checking one by one
+# I choose to divide array portions in a way that each 
+# portion's size is 6 to not exceed the program size limit.
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = n
+abscopy:
+##################################################################
+# You can modify this portion
+        # Loop header
+        xorq %rax,%rax          # sum = 0;
+        andq %rdx,%rdx          # n <= 0?
+        jle Done                # if so, goto Done:
+        
+Cycle:
+        isubq $6, %rdx # n -= 4
+        isubq $0, %rdx  # ..
+        jle Small # Last four ekement
+CycleStart:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        mrmovq 16(%rdi), %r12
+        mrmovq 24(%rdi), %r13
+        mrmovq 32(%rdi), %r14
+        mrmovq 40(%rdi), %r9
+        andq %r10, %r10
+        jge Cycle1
+        isubq $0, %r10
+Cycle1:
+        andq %r11, %r11
+        jge Cycle2
+        isubq $0, %r11
+Cycle2:     
+        andq %r12, %r12
+        jge Cycle3
+        isubq $0, %r12
+Cycle3:
+        andq %r13, %r13
+        jge Cycle4
+        isubq $0, %r13
+Cycle4:        
+        andq %r14, %r14
+        jge Cycle5
+        isubq $0, %r14
+Cycle5:
+        andq %r9, %r9
+        jge CycleEnd
+        isubq $0, %r9
+CycleEnd:
+        addq %r9, %r10
+        addq %r10, %r11
+        addq %r11, %r12
+        addq %r12, %r13
+        addq %r13, %r14
+        addq %r14, %rax
+        rmmovq %r10, (%rsi)
+        rmmovq %r11, 8(%rsi)
+        rmmovq %r12, 16(%rsi)
+        rmmovq %r13, 24(%rsi)
+        rmmovq %r14, 32(%rsi)
+        rmmovq %r9, 40(%rsi)
+        isubq $-48, %rdi
+        isubq $0, %rdi
+        isubq $-48, %rsi
+        isubq $0, %rsi
+        jmp Cycle
+
+Small:
+        isubq $-6, %rdx # add 4 to n 
+        isubq $0, %rdx
+        mrmovq (%rdi), %r10 # src[i] -> r10
+        mrmovq 8(%rdi), %r11 # src[i+1] -> r11
+        andq %r10, %r10
+        jge Small1
+        isubq $0, %r10
+Small1:
+        addq %r10, %rax
+        rmmovq %r10, (%rsi) # src[i] -> dest[i]
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Small2
+        isubq $0, %r11
+Small2:
+        addq %r11, %rax
+        rmmovq %r11, 8(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11        
+        andq %r10, %r10
+        jge Small3
+        isubq $0, %r10
+Small3:
+        addq %r10, %rax
+        rmmovq %r10, 16(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Small4
+        isubq $0, %r11
+Small4:
+        addq %r11, %rax
+        rmmovq %r11, 24(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+	mrmovq 32(%rdi), %r10
+	mrmovq 40(%rdi), %r11        
+        andq %r10, %r10
+        jge Small5
+        isubq $0, %r10
+Small5:
+        addq %r10, %rax
+        rmmovq %r10, 32(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge SmallEnd
+        isubq $0, %r11
+SmallEnd:
+        addq %r11, %rax
+        rmmovq %r11, 40(%rsi)
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+        ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end abscopy-ys */
+EndFun:
+
+###############################
+# Source and destination blocks 
+###############################
+	.align 8
+src:
+	.quad -1
+	.quad -2
+	.quad 3
+	.quad 4
+	.quad 0xbcdefa # This shouldn't get moved
+
+	.align 16
+Predest:
+	.quad 0xbcdefa
+dest:
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+Postdest:
+	.quad 0xdefabc
+
+.align 8
+# Run time stack
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+
+Stack:

@@ -1,0 +1,72 @@
+# You can modify this portion
+        # Loop header
+        xorq %rax,%rax          # sum = 0;
+        andq %rdx,%rdx          # n <= 0?
+        jle Done                # if so, goto Done:
+        
+#        isubq $4, %rdx # n -= 4
+#        isubq $0, %rdx # ..
+#        jle SmallLoop
+
+Cycle:
+#        isubq $-4, %rdx # n += 4
+#        isubq $0, %rdx  # ..
+#        jl Done
+CycleStart:
+        mrmovq (%rdi), %r10
+        mrmovq 8(%rdi), %r11
+        andq %r10, %r10
+        jge Cycle1
+        isubq $0, %r10
+Cycle1:
+        addq %r10, %rax
+        rmmovq %r10, (%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Cycle2
+        isubq $0, %r11
+Cycle2:
+        addq %r11, %rax
+        rmmovq %r11, 8(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+	mrmovq 16(%rdi), %r10
+	mrmovq 24(%rdi), %r11        
+        andq %r10, %r10
+        jge Cycle3
+        isubq $0, %r10
+Cycle3:
+        addq %r10, %rax
+        rmmovq %r10, 16(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        andq %r11, %r11
+        jge Cycle4
+        isubq $0, %r11
+Cycle4:
+        addq %r11, %rax
+        rmmovq %r11, 24(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        mrmovq 32(%rdi), %r10
+        andq %r10, %r10
+        jge CycleEnd
+        isubq $0, %r10
+CycleEnd:
+        addq %r10, %rax
+        rmmovq %r10, 32(%rsi)
+        isubq $1, %rdx
+        isubq $0, %rdx
+        jle Done
+        isubq $-40, %rdi
+        isubq $0, %rdi
+        isubq $-40, %rsi
+        isubq $0, %rsi
+        jmp Cycle
+
+
